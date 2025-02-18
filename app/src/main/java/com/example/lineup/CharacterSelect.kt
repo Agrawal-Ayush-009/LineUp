@@ -109,7 +109,6 @@ class CharacterSelect : AppCompatActivity() {
         //Log.e("id12344","$number")
         val call = apiInterface.storeAvatar(header, Avatar(visibleImage))
         call.enqueue(object : Callback<Avatar2> {
-
             override fun onResponse(call: Call<Avatar2>, response: Response<Avatar2>) {
                 Log.e("id1234", "${response.body()}")
 

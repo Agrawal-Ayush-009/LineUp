@@ -42,7 +42,7 @@ class RadarView : View {
     }
 
     val drawableMap = mapOf(
-        1 to  R.drawable.red_avatar,
+        1 to R.drawable.red_avatar,
         2 to R.drawable.pink_avatar,
         3 to R.drawable.yellow_avatar,
         4 to R.drawable.small_avatar,
@@ -57,17 +57,21 @@ class RadarView : View {
     //    constructor(context: Context) : super(context){
 //        init()
 //    }
-    constructor(context: Context) : super(context){
-        this.context = context
-        init()
-    }
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs){
+    constructor(context: Context) : super(context) {
         this.context = context
         init()
     }
 
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
-    {
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        this.context = context
+        init()
+    }
+
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
         this.context = context
         init()
     }
@@ -102,25 +106,37 @@ class RadarView : View {
                     val avatarId = it.avatar
 
                     // Now that you have the avatarId, perform further actions
-                    val originalDrawable = BitmapFactory.decodeResource(resources, drawableMap[avatarId] ?: return@let)
+                    val originalDrawable =
+                        BitmapFactory.decodeResource(resources, drawableMap[avatarId] ?: return@let)
                     val radarSize = min(width, height)
                     val maxDrawableDimension = (radarSize * 0.09).toInt()
-                    val scaleFactor = maxDrawableDimension.toFloat() / max(originalDrawable.width, originalDrawable.height)
+                    val scaleFactor = maxDrawableDimension.toFloat() / max(
+                        originalDrawable.width,
+                        originalDrawable.height
+                    )
 //                    selfDrawable = Bitmap.createScaledBitmap(originalDrawable, (originalDrawable.width * scaleFactor).toInt(), (originalDrawable.height * scaleFactor).toInt(), true)
                     val newWidth = (originalDrawable.width * scaleFactor).toInt()
                     val newHeight = (originalDrawable.height * scaleFactor).toInt()
 
                     if (newWidth > 0 && newHeight > 0) {
-                        selfDrawable = Bitmap.createScaledBitmap(originalDrawable, newWidth, newHeight, true)
+                        selfDrawable =
+                            Bitmap.createScaledBitmap(originalDrawable, newWidth, newHeight, true)
                     } else {
-                        Log.e("RadarView", "Invalid dimensions for bitmap: width=$newWidth, height=$newHeight")
+                        Log.e(
+                            "RadarView",
+                            "Invalid dimensions for bitmap: width=$newWidth, height=$newHeight"
+                        )
                     }
                 }
             }
 
             override fun onFailure(call: Call<AccessAvatar2>, t: Throwable) {
-                Toast.makeText(context.applicationContext,"Something went wrong!",Toast.LENGTH_SHORT).show()
-                val intent= Intent(context,LoginActivity::class.java)
+                Toast.makeText(
+                    context.applicationContext,
+                    "Something went wrong!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                val intent = Intent(context, LoginActivity::class.java)
                 context.startActivity(intent)
                 (context as Activity).finish()
             }
@@ -134,7 +150,8 @@ class RadarView : View {
         val centerX = width / 2
         val centerY = height / 2f
         // Calculate maxDistanceInKm dynamically based on the actual distance values of users
-        val maxDistanceInKm = users.maxByOrNull { it.distance } ?.distance ?: 1.0 // Default to 100 km if no users are present
+        val maxDistanceInKm = users.maxByOrNull { it.distance }?.distance
+            ?: 1.0 // Default to 100 km if no users are present
         //  val maxDistanceInKm = 1 // Maximum distance in kilometers (adjust as needed)
         val maxRadarDimension = min(width, height) // Assuming radar view is square
         val maxRadarRadius = maxRadarDimension / 2
@@ -161,12 +178,14 @@ class RadarView : View {
             val separationFactor = 0.35 // Adjust this factor as needed
             var distance = maxDistanceInKm * (0.5 + (sortedUsers.indexOf(user) * separationFactor))
             // Calculate position of the user based on distance and direction
-            var x = centerX + distance * scalingFactor * cos(Math.toRadians(directionInDegrees)).toFloat()
-            var y = centerY + distance * scalingFactor * sin(Math.toRadians(directionInDegrees)).toFloat()
+            var x =
+                centerX + distance * scalingFactor * cos(Math.toRadians(directionInDegrees)).toFloat()
+            var y =
+                centerY + distance * scalingFactor * sin(Math.toRadians(directionInDegrees)).toFloat()
 
 
             //canvas.drawCircle(x.toFloat(), y.toFloat(), 20f, userPaint)
-            val userLayout = createUserLayout(user,maxRadarDimension)
+            val userLayout = createUserLayout(user, maxRadarDimension)
             userLayout.measure(width, height)
             userLayout.layout(0, 0, width, height)
             val userLayoutWidth = userLayout.measuredWidth
@@ -185,12 +204,12 @@ class RadarView : View {
                 y = (height - userLayoutHeight.toFloat()).toDouble()
             }
             canvas.save()
-            canvas.translate((x - userLayout.measuredWidth / 2f).toFloat(),
+            canvas.translate(
+                (x - userLayout.measuredWidth / 2f).toFloat(),
                 (y - userLayout.measuredHeight / 2f).toFloat()
             )
             userLayout.draw(canvas)
             canvas.restore()
-
         }
     }
 
@@ -221,69 +240,85 @@ class RadarView : View {
         val selfDrawableHeight = selfDrawable?.height ?: 0
 
         if (selfDrawableWidth > 0 && selfDrawableHeight > 0) {
-        // Avatar ImageView
-        val avatarImageView = ImageView(context)
-        avatarImageView.id = View.generateViewId() // Set unique id for this view
-        val avatarDrawable = BitmapFactory.decodeResource(
-            resources,
-            drawableMap[user.avatar] ?: R.drawable.red_avatar
-        )
-        val scaledAvatar =
-            Bitmap.createScaledBitmap(avatarDrawable, selfDrawableWidth, selfDrawableHeight, true)
-        avatarImageView.setImageBitmap(scaledAvatar)
-        val avatarLayoutParams = RelativeLayout.LayoutParams(
-            RelativeLayout.LayoutParams.WRAP_CONTENT,
-            RelativeLayout.LayoutParams.WRAP_CONTENT
-        )
-        avatarLayoutParams.addRule(
-            RelativeLayout.BELOW,
-            nameTextView.id
-        ) // Position below the name TextView
-        avatarLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL)
-        avatarImageView.layoutParams = avatarLayoutParams
-        userLayout.addView(avatarImageView)
+            // Avatar ImageView
+            val avatarImageView = ImageView(context)
+            avatarImageView.id = View.generateViewId() // Set unique id for this view
+            val avatarDrawable = BitmapFactory.decodeResource(
+                resources,
+                drawableMap[user.avatar] ?: R.drawable.red_avatar
+            )
+            val scaledAvatar =
+                Bitmap.createScaledBitmap(
+                    avatarDrawable,
+                    selfDrawableWidth,
+                    selfDrawableHeight,
+                    true
+                )
+            avatarImageView.setImageBitmap(scaledAvatar)
+            val avatarLayoutParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+            )
+            avatarLayoutParams.addRule(
+                RelativeLayout.BELOW,
+                nameTextView.id
+            ) // Position below the name TextView
+            avatarLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL)
+            avatarImageView.layoutParams = avatarLayoutParams
+            userLayout.addView(avatarImageView)
 
-        // Distance TextView
-        val distanceTextView = TextView(context)
-        distanceTextView.id = View.generateViewId() // Set unique id for this view
-        // Calculate distance in meters
-        val distanceInMeters = user.distance * 1000 // Convert kilometers to meters
+            // Distance TextView
+            val distanceTextView = TextView(context)
+            distanceTextView.id = View.generateViewId() // Set unique id for this view
+            // Calculate distance in meters
+            val distanceInMeters = user.distance * 1000 // Convert kilometers to meters
 
 // Determine the appropriate format based on distance
-        val formattedDistance = if (distanceInMeters < 1000) {
-            "${String.format("%.0f", distanceInMeters)}m" // Format meters without decimal places
-        } else {
-            "${String.format("%.2f", user.distance)}km" // Format kilometers with 3 decimal places
-        }
+            val formattedDistance = if (distanceInMeters < 1000) {
+                "${
+                    String.format(
+                        "%.0f",
+                        distanceInMeters
+                    )
+                }m" // Format meters without decimal places
+            } else {
+                "${
+                    String.format(
+                        "%.2f",
+                        user.distance
+                    )
+                }km" // Format kilometers with 3 decimal places
+            }
 
 // Set the text with the formatted distance
-        distanceTextView.text = formattedDistance
+            distanceTextView.text = formattedDistance
 
-        distanceTextView.textSize = maxDrawableDimension.toFloat()
-        distanceTextView.gravity = Gravity.CENTER_HORIZONTAL
-        val distanceLayoutParams = RelativeLayout.LayoutParams(
-            RelativeLayout.LayoutParams.WRAP_CONTENT,
-            RelativeLayout.LayoutParams.WRAP_CONTENT
-        )
-        distanceLayoutParams.addRule(
-            RelativeLayout.BELOW,
-            avatarImageView.id
-        ) // Position below the avatar ImageView
-        distanceLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL)
-        distanceTextView.layoutParams = distanceLayoutParams
-        userLayout.addView(distanceTextView)
+            distanceTextView.textSize = maxDrawableDimension.toFloat()
+            distanceTextView.gravity = Gravity.CENTER_HORIZONTAL
+            val distanceLayoutParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+            )
+            distanceLayoutParams.addRule(
+                RelativeLayout.BELOW,
+                avatarImageView.id
+            ) // Position below the avatar ImageView
+            distanceLayoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL)
+            distanceTextView.layoutParams = distanceLayoutParams
+            userLayout.addView(distanceTextView)
 
-        // Set margins to ensure space between elements
-        val margin = 8 // Adjust margin as needed
-        val userLayoutParams = RelativeLayout.LayoutParams(
-            RelativeLayout.LayoutParams.WRAP_CONTENT,
-            RelativeLayout.LayoutParams.WRAP_CONTENT
-        )
-        userLayoutParams.setMargins(margin, margin, margin, margin)
-        userLayout.layoutParams = userLayoutParams
-    }
+            // Set margins to ensure space between elements
+            val margin = 8 // Adjust margin as needed
+            val userLayoutParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+            )
+            userLayoutParams.setMargins(margin, margin, margin, margin)
+            userLayout.layoutParams = userLayoutParams
+        }
         return userLayout
     }
+
     fun directionToDegrees(direction: String): Double {
         return when (direction.uppercase(Locale.ROOT)) {
             "N" -> 270.0
